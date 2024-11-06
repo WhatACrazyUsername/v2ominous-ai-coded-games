@@ -179,7 +179,7 @@
         function createCoin() {
             let coinX = Math.random() * (canvas.width - 40);
             let coinY = -30;
-            coins.push({ x: coinX, y: coinY, width: 30, height: 30, speed: 3 });
+            coins.push({ x: coinX, y: coinY, width: 30, height: 30 });
         }
 
         // Update coin positions and check for collisions with the player car
@@ -199,7 +199,7 @@
                 if (playerCar.x < coins[i].x + coins[i].width &&
                     playerCar.x > coins[i].x &&
                     playerCar.y < coins[i].y + coins[i].height &&
-                    playerCar.y + playerCar.height > coins[i].y) {
+                    playerCar.y > coins[i].y) {
                     coinCount++;
                     localStorage.setItem('coinCount', coinCount);
                     coinCounter.innerText = coinCount;
