@@ -179,7 +179,7 @@
         function createCoin() {
             let coinX = Math.random() * (canvas.width - 40);
             let coinY = -30;
-            coins.push({ x: coinX, y: coinY, width: 30, height: 30 });
+            coins.push({ x: coinX, y: coinY, radius: 30, height: 30 });
         }
 
         // Update coin positions and check for collisions with the player car
@@ -196,9 +196,9 @@
                 }
 
                 // Coin collision detection
-                if (playerCar.x < coins[i].x + coins[i].width &&
+                if (playerCar.x < coins[i].x + coins[i].radius &&
                     playerCar.x > coins[i].x &&
-                    playerCar.y < coins[i].y + coins[i].height &&
+                    playerCar.y < coins[i].y + coins[i].radius &&
                     playerCar.y > coins[i].y) {
                     coinCount++;
                     localStorage.setItem('coinCount', coinCount);
@@ -215,7 +215,7 @@
             ctx.fillStyle = 'yellow';
             for (let coin of coins) {
                 ctx.beginPath();
-                ctx.arc(coin.x + coin.width / 2, coin.y + coin.height / 2, coin.width / 2, 0, Math.PI * 2);
+                ctx.arc(coin.x + coin.radius / 2, coin.y + coin.radius / 2, coin.radius / 2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
