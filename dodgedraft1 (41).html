@@ -170,6 +170,7 @@
         let coinCount = parseInt(localStorage.getItem('coinCount')) || 0;
         let gameOver = false;
         let isPaused = false;
+        const coinSpeed = 3;
 
         highScoreboard.innerText = 'High Score: ' + highScore;
         coinCounter.innerText = coinCount;
@@ -185,7 +186,7 @@
         function updateCoins() {
             let numCoins = coins.length;
             for (let i = 0; i < numCoins; i++) {
-                coins[i].y += coins[i].speed;
+                coins[i].y += coinSpeed;
                 
                 // If the coin goes off-screen, remove it from the array
                 if (coins[i].y > canvas.height) {
