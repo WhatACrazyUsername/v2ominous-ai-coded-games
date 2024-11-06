@@ -369,22 +369,25 @@
         // Start the game after fade out
         startGame();
 
-        // Keyboard controls
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') {
-                playerCar.moveLeft = true;
-            } else if (e.key === 'ArrowRight') {
-                playerCar.moveRight = true;
-            }
-        });
 
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft') {
-                playerCar.moveLeft = false;
-            } else if (e.key === 'ArrowRight') {
-                playerCar.moveRight = false;
-            }
-        });
+        function detectMovement(){
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    playerCar.moveLeft = true;
+                } else if (e.key === 'ArrowRight') {
+                    playerCar.moveRight = true;
+                }
+            });
+    
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    playerCar.moveLeft = false;
+                } else if (e.key === 'ArrowRight') {
+                    playerCar.moveRight = false;
+                }
+            });
+        }
+        detectMovement();
     </script>
 </body>
 </html>
