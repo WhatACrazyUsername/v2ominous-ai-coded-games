@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodge</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+            background: black;
+            margin: auto;
+            border: 2px solid #000;
+        }
+        #retryButton {
+            display: none;
+            position: absolute;
+            top: 250px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 24px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #pauseButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: gray;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #pauseMenu, #cheatMenu {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #shopButton, #resumeButton, #resetButton, #applyCheatButton, #resetHighScoreButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        #shopButton { background-color: brown; color: white; }
+        #resumeButton, #applyCheatButton { background-color: green; color: white; }
+        #resetButton { background-color: red; color: white; }
+        #resetHighScoreButton { background-color: orange; color: white; }
+        #scoreboard, #highScoreboard {
+            color: black;
+            font-size: 20px;
+            background: white;
+            padding: 5px;
+            border-radius: 5px;
+            position: absolute;
+            right: 20px;
+        }
+        #scoreboard { top: 20px; }
+        #highScoreboard { top: 60px; }
+        #coinCounter {
+            top: 100px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            text-align: center;
+            color: black;
+            background-color: yellow;
+            border-radius: 50%;
+            line-height: 40px;
+            position: absolute;
+        }
+        #coinLabel {
+            position: absolute;
+            top: 145px;
+            right: 20px;
+            font-size: 16px;
+            text-align: center;
+            width: 40px;
+            color: black;
+        }
+        #versionText {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 14px;
+            color: gray;
+        }
+        #introText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: white;
+            opacity: 1;
+            transition: opacity 2s ease-out;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="raceCanvas" width="800" height="600"></canvas>
+    <div id="scoreboard">Score: 0</div>
+    <div id="highScoreboard">High Score: 0</div>
+    <div id="coinCounter">0</div>
+    <div id="coinLabel">Coins</div>
+    <button id="retryButton" onclick="retryGame()">Retry</button>
+    <button id="pauseButton" onclick="togglePauseMenu()">Pause</button>
+
+    <div id="pauseMenu">
+        <h3>Game Paused</h3>
+        <button id="resumeButton" onclick="resumeGame()">Resume</button>
+        <button id="resetButton" onclick="resetGame()">Reset</button>
+        <button id="resetHighScoreButton" onclick="resetHighScore()">Reset High Score</button>
+        <button id="shopButton" onclick="openShop()">Shop (Not Available)</button>
+    </div>
+
+    <div id="cheatMenu">
+        <h3>Cheat Settings</h3>
+        <label>Set Score: <input type="number" id="setScoreInput"></label><br><br>
+        <label>Set Coins: <input type="number" id="setCoinsInput"></label><br><br>
+        <button id="applyCheatButton" onclick="applyCheats()">Apply</button>
+    </div>
+
+    <div id="introText">Dodge v1.0</div>
+    <div id="versionText">v1.0</div>
+
+    <script>
+        const canvas = document.getElementById('raceCanvas');
+        const ctx = canvas.getContext('2d');
+        const retryButton = document.getElementById('retryButton');
+        const pauseButton = document.getElementById('pauseButton');
+        const pauseMenu = document.getElementById('pauseMenu');
+        const shopButton = document.getElementById('shopButton');
+        const scoreboard = document.getElementById('scoreboard');
+        const highScoreboard = document.getElementById('highScoreboard');
+        const coinCounter = document.getElementById('coinCounter');
+        const cheatMenu = document.getElementById('cheatMenu');
+        const setScoreInput = document.getElementById('setScoreInput');
+        const setCoinsInput = document.getElementById('setCoinsInput');
+        const resetHighScoreButton = document.getElementById('resetHighScoreButton');
+        const introText = document.getElementById('introText');
+        const versionText = document.getElementById('versionText');
+
+        let playerCar = { x: canvas.width / 2 - 25, y: canvas.height - 120, width: 50, height: 100, speed: 5, moveLeft: false, moveRight: false };
+        let aiCars = [];
+        let coins = [];
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        let coinCount = parseInt(localStorage.getItem('coinCount')) || 0;
+        let gameOver = false;
+        let isPaused = false;
+        const coinSpeed = 3;
+
+        let gameLoopsRunning = 0; //should be 0 or 1 always
+
+        highScoreboard.innerText = 'High Score: ' + highScore;
+        coinCounter.innerText = coinCount;
+
+        function startGame() {
+            detectMovement();
+            introAnimation();
+            setTimeout(()=>{
+                gameLoop();
+            },4000)
+        }
+        startGame();
+
+        // Create random coins
+        function createCoin() {
+            let coinX = Math.random() * (canvas.width - 40);
+            let coinY = -30;
+            coins.push({ x: coinX, y: coinY, radius: 15 });
+        }
+
+        function openRetryMenu(){
+            retryButton.style.display = "block";
+        }
+
+        // Update coin positions and check for collisions with the player car
+        function updateCoins() {
+            let numCoins = coins.length;
+            for (let i = 0; i < numCoins; i++) {
+                coins[i].y += coinSpeed;
+
+                // Coin collision detection
+                if (playerCar.x < coins[i].x + coins[i].radius &&
+                    playerCar.x + playerCar.width > coins[i].x - coins[i].radius &&
+                    playerCar.y < coins[i].y + coins[i].radius &&
+                    playerCar.y + playerCar.height > coins[i].y - coins[i].radius) {
+                    coinCount++;
+                    
+                    localStorage.setItem('coinCount', coinCount);
+                    coinCounter.innerText = coinCount;
+                    coins.splice(i, 1); // Remove coin when collided
+                    numCoins--;
+                    i--; // Adjust index
+                }
+            }
+        }
+
+        // Draw coins
+        function drawCoins() {
+            ctx.fillStyle = 'yellow';
+            for (let coin of coins) {
+                ctx.beginPath();
+                ctx.arc(coin.x + coin.radius / 2, coin.y + coin.radius / 2, coin.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Create random AI cars
+        function createAICar() {
+            if (aiCars.length < (score >= 50 ? 5 : 3)) {
+                let aiCar = {
+                    x: Math.random() * (canvas.width - 50),
+                    y: -100,
+                    width: 50,
+                    height: 100,
+                    speed: Math.random() * 5 + 2
+                };
+                aiCars.push(aiCar);
+            }
+        }
+
+        // Update AI car positions and check for collisions
+        function updateAICars() {
+            for (let i = 0; i < aiCars.length; i++) {
+                aiCars[i].y += aiCars[i].speed;
+                if(playerCar.x<aiCars[i].x + aiCars[i].width&&playerCar.x+playerCar.width>aiCars[i].x&&playerCar.y<aiCars[i].y+aiCars[i].width&&playerCar.y+playerCar.height>aiCars[i].y){
+                    gameOver=1;
+                }
+                if (aiCars[i].y > canvas.height) {
+                    aiCars.splice(i, 1);
+                    score++;
+                    scoreboard.innerText = 'Score: ' + score;
+                    i--;
+                }
+            }
+        }
+
+        // Draw AI cars
+        function drawAICars() {
+            ctx.fillStyle = 'red';
+            for (let aiCar of aiCars) {
+                ctx.fillRect(aiCar.x, aiCar.y, aiCar.width, aiCar.height);
+            }
+        }
+
+        // Draw player car
+        function drawPlayerCar() {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(playerCar.x, playerCar.y, playerCar.width, playerCar.height);
+        }
+
+        // Move player car
+        function movePlayerCar() {
+            if (playerCar.moveLeft && playerCar.x > 0) {
+                playerCar.x -= playerCar.speed;
+            }
+            if (playerCar.moveRight && playerCar.x < canvas.width - playerCar.width) {
+                playerCar.x += playerCar.speed;
+            }
+        }
+
+        // Game loop
+        function gameLoop() {
+            gameLoopsRunning++;
+            if(gameLoopsRunning>=2){
+                gameLoopsRunning--;
+                return;
+            }
+            if (gameOver){
+                openRetryMenu();
+                gameLoopsRunning--;
+                return;
+            };
+            if(isPaused){
+                gameLoopsRunning--;
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            updateCoins();
+            drawCoins();
+            updateAICars();
+            drawAICars();
+            drawPlayerCar();
+            movePlayerCar();
+
+            // Randomly create AI cars and coins
+            if (Math.random() < 0.02) createAICar();
+            if (Math.random() < 0.01) createCoin();
+
+            requestAnimationFrame(callGameLoop);
+        }
+
+        function callGameLoop(){
+            gameLoopsRunning--;
+            gameLoop();
+        }
+
+        function togglePauseMenu() {
+            if (isPaused) {
+                resumeGame();
+            } else {
+
+                //prevents pausing if the game hasn't started
+                if(gameLoopsRunning==0){
+                    return;
+                }
+                
+                isPaused = 1;
+                pauseMenu.style.display = 'block';
+            }
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            pauseMenu.style.display = 'none';
+            gameLoop();
+        }
+
+        // Retry game
+        function retryGame() {
+            score = 0;
+            coinCount = 0;
+            localStorage.setItem('coinCount', coinCount);
+            coinCounter.innerText = coinCount;
+            aiCars = [];
+            coins = [];
+            gameOver = false;
+            retryButton.style.display = 'none';
+            gameLoop();
+        }
+
+        // Reset game
+        function resetGame() {
+            score = 0;
+            localStorage.setItem('score', score);
+            scoreboard.innerText = 'Score: ' + score;
+            aiCars = [];
+            coins = [];
+            gameOver = false;
+            gameLoop();
+        }
+
+        // Shop (not implemented)
+        function openShop() {
+            alert("Shop coming in update v1.1.");
+        }
+
+        // Apply cheats
+        function applyCheats() {
+            score = parseInt(setScoreInput.value);
+            coinCount = parseInt(setCoinsInput.value);
+            localStorage.setItem('score', score);
+            localStorage.setItem('coinCount', coinCount);
+            scoreboard.innerText = 'Score: ' + score;
+            coinCounter.innerText = coinCount;
+            cheatMenu.style.display = 'none';
+        }
+
+        function resetHighScore() {
+            localStorage.setItem('highScore', 0);
+            highScore = 0;
+            highScoreboard.innerText = 'High Score: ' + highScore;
+        }
+
+        function introAnimation(){
+            introText.style.opacity = '1';
+            setTimeout(() => {
+                introText.style.opacity = '0'; // Fade out
+                setTimeout(() => {
+                    introText.style.display = 'none'; // Hide intro text after fade out
+                }, 2000);
+            }, 2000);
+        }
+
+
+        function detectMovement(){
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    playerCar.moveLeft = true;
+                }
+                if (e.key === 'ArrowRight') {
+                    playerCar.moveRight = true;
+                }
+                if(e.key == 'Escape'){
+                    togglePauseMenu();
+                }
+            });
+    
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    playerCar.moveLeft = false;
+                }
+                if (e.key === 'ArrowRight') {
+                    playerCar.moveRight = false;
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
