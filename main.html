@@ -247,7 +247,10 @@
         function updateAICars() {
             for (let i = 0; i < aiCars.length; i++) {
                 aiCars[i].y += aiCars[i].speed;
-                if(playerCar.x<aiCars[i].x + aiCars[i].width&&playerCar.x+playerCar.width>aiCars[i].x&&playerCar.y<aiCars[i].y+aiCars[i].width&&playerCar.y+playerCar.height>aiCars[i].y){
+                if(playerCar.x<aiCars[i].x + aiCars[i].width&&
+                playerCar.x+playerCar.width>aiCars[i].x&&
+                playerCar.y<aiCars[i].y+aiCars[i].height&&
+                playerCar.y+playerCar.height>aiCars[i].y){
                     gameOver=1;
                 }
                 if (aiCars[i].y > canvas.height) {
@@ -329,7 +332,7 @@
                 if(gameLoopsRunning==0){
                     return;
                 }
-                
+
                 isPaused = 1;
                 pauseMenu.style.display = 'block';
             }
